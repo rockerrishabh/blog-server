@@ -1,0 +1,20 @@
+[package]
+name = "rust-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-cors = "0.7.0"
+actix-web = "4.9.0"
+argon2 = "0.5.3"
+chrono = { version = "0.4.38", features = ["serde"] }
+diesel = { version = "2.2.4", features = ["chrono", "postgres", "r2d2", "uuid"] }
+dotenv = "0.15.0"
+jsonwebtoken = "9.3.0"
+lettre = "0.11.9"
+serde = { version = "1.0.210", features = ["derive"] }
+uuid = { version = "1.10.0", features = ["fast-rng", "macro-diagnostics", "v4"] }
+validator = { version = "0.18.1", features = ["derive"] }
+http = "0.2.12"
+futures-util = "0.3.31"
+serde_json = "1.0.132"
