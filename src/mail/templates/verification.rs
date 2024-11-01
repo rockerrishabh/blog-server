@@ -7,9 +7,8 @@ pub fn verification_template(
 ) -> (String, String, String, String, String) {
     let subject = "Verify Your Email".to_string();
     let to = format!("{} <{}>", &name, &email);
-    let smtp_verification_username = "Verification".to_string();
-    let smtp_verification_email =
-        env::var("SMTP_VERIFICATION_USER").expect("SMTP_USER must be set");
+    let smtp_verification_username = "Support".to_string();
+    let smtp_verification_email = env::var("SMTP_SUPPORT_USER").expect("SMTP_USER must be set");
 
     let html = format!(
         r#"

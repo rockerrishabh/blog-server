@@ -6,4 +6,4 @@ file = "src/db/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
 
 [migrations_directory]
-dir = "/home/projects/blog-app/rust-server/migrations"
+dir = "/home/projects/blog-app/blog-server/migrations"

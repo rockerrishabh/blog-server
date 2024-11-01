@@ -27,7 +27,7 @@ pub fn send_mail(options: MailOptions) {
         .from(from.as_str().parse().unwrap())
         .reply_to(from.as_str().parse().unwrap())
         .to(options.to.as_str().parse().unwrap())
-        .subject(&options.subject)
+        .subject(options.subject.as_str())
         .header(ContentType::TEXT_HTML)
         .body(options.html_content.to_owned())
         .unwrap();
@@ -35,7 +35,7 @@ pub fn send_mail(options: MailOptions) {
     let creds = Credentials::new(options.useremail.to_owned(), smtp_password.to_owned());
 
     // Open a remote connection to gmail
-    let mailer = SmtpTransport::starttls_relay(&smtp_host)
+    let mailer = SmtpTransport::starttls_relay(smtp_host.as_str())
         .unwrap()
         .credentials(creds)
         .build();
