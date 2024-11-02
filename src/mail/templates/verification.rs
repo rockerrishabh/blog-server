@@ -4,12 +4,14 @@ pub fn verification_template(
     name: String,
     email: String,
     token: String,
-) -> (String, String, String, String, String) {
+) -> (String, String, String, String, String, String) {
     let subject = "Verify Your Email".to_string();
     let to = format!("{} <{}>", &name, &email);
-    let smtp_verification_username = "Support".to_string();
-    let smtp_verification_email = env::var("SMTP_SUPPORT_USER").expect("SMTP_USER must be set");
-
+    let smtp_verification_name = "Verification Team".to_string();
+    let smtp_verification_user =
+        env::var("SMTP_VERIFICATION_USER").expect("SMTP_VERIFICATION_USER must be set");
+    let smtp_verification_email =
+        env::var("SMTP_VERIFICATION_EMAIL").expect("SMTP_VERIFICATION_EMAIL must be set");
     let html = format!(
         r#"
         <!DOCTYPE html>
@@ -68,7 +70,8 @@ pub fn verification_template(
         subject,
         to,
         html,
-        smtp_verification_username,
+        smtp_verification_name,
+        smtp_verification_user,
         smtp_verification_email,
     );
 }

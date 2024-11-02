@@ -109,12 +109,14 @@ async fn register(data: Data<AppState>, body: Json<RegisterRequest>) -> impl Res
                                 subject,
                                 to,
                                 html,
-                                smtp_verification_username,
+                                smtp_verification_name,
+                                smtp_verification_user,
                                 smtp_verification_email,
                             ) = verification_template(user.name, user.email, token);
                             let options = MailOptions {
-                                username: smtp_verification_username,
-                                useremail: smtp_verification_email,
+                                user: smtp_verification_user,
+                                user_name: smtp_verification_name,
+                                user_email: smtp_verification_email,
                                 to,
                                 subject,
                                 html_content: html,

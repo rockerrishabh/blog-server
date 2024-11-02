@@ -8,8 +8,9 @@ pub struct MailOptions {
     pub html_content: String,
     pub to: String,
     pub subject: String,
-    pub username: String,
-    pub useremail: String,
+    pub user: String,
+    pub user_name: String,
+    pub user_email: String,
 }
 
 impl MailOptions {
@@ -21,7 +22,8 @@ impl MailOptions {
 pub fn send_mail(options: MailOptions) {
     let smtp_password = env::var("SMTP_PASSWORD").expect("SMTP_PASSWORD must be set");
     let smtp_host = env::var("SMTP_HOST").expect("SMTP_HOST must be set");
-    let from = format!("{} <{}>", options.username, &options.useremail);
+
+    let from = format!("{} <{}>", options.user_name, options.user_email);
 
     let email = Message::builder()
         .from(from.as_str().parse().unwrap())
@@ -32,7 +34,7 @@ pub fn send_mail(options: MailOptions) {
         .body(options.html_content.to_owned())
         .unwrap();
 
-    let creds = Credentials::new(options.useremail.to_owned(), smtp_password.to_owned());
+    let creds = Credentials::new(options.user.to_owned(), smtp_password.to_owned());
 
     // Open a remote connection to gmail
     let mailer = SmtpTransport::starttls_relay(smtp_host.as_str())

@@ -8,9 +8,8 @@ use actix_web::{
     error::ErrorUnauthorized,
     Error, HttpMessage,
 };
-use diesel::QueryDsl;
 
-use crate::{db::schema::users::dsl::users, utils::hashing::decode_jwt};
+use crate::utils::hashing::decode_jwt;
 
 pub struct Authentication;
 
@@ -77,9 +76,6 @@ where
                                             match decode_jwt(header_token) {
                                                 Ok(header_data) => {
                                                     if cookie_data.sub == header_data.sub {
-                                                        // let existing_user =
-                                                        //     users.find(&header_data.sub);
-
                                                         req.extensions_mut()
                                                             .insert(header_data.sub);
 
