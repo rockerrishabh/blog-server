@@ -1,15 +1,13 @@
-use std::{
-    future::{ready, Future, Ready},
-    pin::Pin,
-};
-
+use crate::utils::hashing::decode_jwt;
 use actix_web::{
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
     error::ErrorUnauthorized,
     Error, HttpMessage,
 };
-
-use crate::utils::hashing::decode_jwt;
+use std::{
+    future::{ready, Future, Ready},
+    pin::Pin,
+};
 
 pub struct Authentication;
 
@@ -48,194 +46,62 @@ where
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let user_id_cookie = req.cookie("auth_token");
-        let a = req.headers().get("Authorization");
-        println!("{:?}", a);
 
         let path = req.path();
-        let posts_pth = path.starts_with("/posts");
-        let users_pth = path.starts_with("/users");
+        let protected_routes = match path {
+            p if p.starts_with("/posts") => vec!["/update", "/create", "/delete"],
+            p if p.starts_with("/users") => vec!["/logout"],
+            _ => return Box::pin(self.service.call(req)),
+        };
 
-        if users_pth {
-            let protected_routes = vec!["/logout"];
-            let routes = protected_routes.iter();
-            for route in routes {
-                if path.ends_with(route) {
-                    if let Some(cookie) = user_id_cookie {
-                        let cookie_token = cookie.value();
-
-                        match decode_jwt(cookie_token) {
-                            Ok(cookie_data) => {
-                                let authorization = req.headers().get("Authorization");
-
-                                if let Some(auth_data) = authorization {
-                                    let data = auth_data.to_str();
-                                    match data {
-                                        Ok(auth_val) => {
-                                            let header_token = &auth_val[7..];
-
-                                            match decode_jwt(header_token) {
-                                                Ok(header_data) => {
-                                                    if cookie_data.sub == header_data.sub {
-                                                        req.extensions_mut()
-                                                            .insert(header_data.sub);
-
-                                                        let fut = self.service.call(req);
-                                                        return Box::pin(async move {
-                                                            let res = fut.await?;
-                                                            Ok(res)
-                                                        });
-                                                    } else {
-                                                        return Box::pin(async move {
-                                                            Err(ErrorUnauthorized(
-                                                                "User ID mismatch between cookie and header!",
-                                                            ))
-                                                        });
-                                                    }
-                                                }
-                                                Err(err) => {
-                                                    return Box::pin(async move {
-                                                        Err(ErrorUnauthorized(format!(
-                                                            "Invalid JWT in Authorization header: {}",
-                                                            err
-                                                        )))
-                                                    });
-                                                }
-                                            }
-                                        }
-                                        Err(e) => {
-                                            return Box::pin(async move {
-                                                Err(ErrorUnauthorized(format!(
-                                                    "Error converting Authorization header to string: {}",
-                                                    e
-                                                )))
-                                            });
-                                        }
-                                    }
-                                } else {
-                                    return Box::pin(async move {
-                                        Err(ErrorUnauthorized("Authorization header not found!"))
-                                    });
-                                }
-                            }
-                            Err(err) => {
-                                return Box::pin(async move {
-                                    Err(ErrorUnauthorized(format!(
-                                        "Invalid JWT in auth_token cookie: {}",
-                                        err
-                                    )))
-                                });
-                            }
+        for route in protected_routes {
+            if path.ends_with(route) {
+                if let Some(cookie) = user_id_cookie {
+                    let cookie_token = cookie.value();
+                    return match validate_jwt(&req, cookie_token) {
+                        Ok(sub) => {
+                            req.extensions_mut().insert(sub);
+                            Box::pin(self.service.call(req))
                         }
-                    } else {
-                        return Box::pin(async move {
-                            Err(ErrorUnauthorized("auth_token cookie not found!"))
-                        });
-                    }
+                        Err(e) => Box::pin(async move { Err(ErrorUnauthorized(e)) }),
+                    };
                 } else {
-                    let fut = self.service.call(req);
                     return Box::pin(async move {
-                        let res = fut.await?;
-                        Ok(res)
+                        Err(ErrorUnauthorized("auth_token cookie not found!"))
                     });
                 }
             }
         }
 
-        if posts_pth {
-            let protected_routes = vec!["/update", "/create", "/delete"];
-            let routes = protected_routes.iter();
-            for route in routes {
-                if path.ends_with(route) {
-                    if let Some(cookie) = user_id_cookie {
-                        let cookie_token = cookie.value();
+        Box::pin(self.service.call(req))
+    }
+}
 
-                        match decode_jwt(cookie_token) {
-                            Ok(cookie_data) => {
-                                let authorization = req.headers().get("Authorization");
+fn validate_jwt(req: &ServiceRequest, cookie_token: &str) -> Result<String, String> {
+    match decode_jwt(cookie_token) {
+        Ok(cookie_data) => {
+            let authorization = req.headers().get("Authorization");
 
-                                if let Some(auth_data) = authorization {
-                                    let data = auth_data.to_str();
-                                    match data {
-                                        Ok(auth_val) => {
-                                            let header_token = &auth_val[7..];
+            if let Some(auth_data) = authorization {
+                let auth_val = auth_data
+                    .to_str()
+                    .map_err(|_| "Error converting Authorization header to string")?;
+                let header_token = &auth_val[7..];
 
-                                            match decode_jwt(header_token) {
-                                                Ok(header_data) => {
-                                                    if cookie_data.sub == header_data.sub {
-                                                        req.extensions_mut()
-                                                            .insert(header_data.sub);
-
-                                                        let fut = self.service.call(req);
-                                                        return Box::pin(async move {
-                                                            let res = fut.await?;
-                                                            Ok(res)
-                                                        });
-                                                    } else {
-                                                        return Box::pin(async move {
-                                                            Err(ErrorUnauthorized(
-                                                                "User ID mismatch between cookie and header!",
-                                                            ))
-                                                        });
-                                                    }
-                                                }
-                                                Err(err) => {
-                                                    return Box::pin(async move {
-                                                        Err(ErrorUnauthorized(format!(
-                                                            "Invalid JWT in Authorization header: {}",
-                                                            err
-                                                        )))
-                                                    });
-                                                }
-                                            }
-                                        }
-                                        Err(e) => {
-                                            return Box::pin(async move {
-                                                Err(ErrorUnauthorized(format!(
-                                                    "Error converting Authorization header to string: {}",
-                                                    e
-                                                )))
-                                            });
-                                        }
-                                    }
-                                } else {
-                                    return Box::pin(async move {
-                                        Err(ErrorUnauthorized("Authorization header not found!"))
-                                    });
-                                }
-                            }
-                            Err(err) => {
-                                return Box::pin(async move {
-                                    Err(ErrorUnauthorized(format!(
-                                        "Invalid JWT in auth_token cookie: {}",
-                                        err
-                                    )))
-                                });
-                            }
+                match decode_jwt(header_token) {
+                    Ok(header_data) => {
+                        if cookie_data.sub == header_data.sub {
+                            Ok(header_data.sub)
+                        } else {
+                            Err("User ID mismatch between cookie and header!".into())
                         }
-                    } else {
-                        return Box::pin(async move {
-                            Err(ErrorUnauthorized("auth_token cookie not found!"))
-                        });
                     }
-                } else {
-                    let fut = self.service.call(req);
-                    return Box::pin(async move {
-                        let res = fut.await?;
-                        Ok(res)
-                    });
+                    Err(err) => Err(format!("Invalid JWT in Authorization header: {}", err)),
                 }
+            } else {
+                Err("Authorization header not found!".into())
             }
-            let fut = self.service.call(req);
-            return Box::pin(async move {
-                let res = fut.await?;
-                Ok(res)
-            });
-        } else {
-            let fut = self.service.call(req);
-            return Box::pin(async move {
-                let res = fut.await?;
-                Ok(res)
-            });
         }
+        Err(err) => Err(format!("Invalid JWT in auth_token cookie: {}", err)),
     }
 }

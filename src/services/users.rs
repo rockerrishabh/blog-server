@@ -110,11 +110,9 @@ async fn register(data: Data<AppState>, body: Json<RegisterRequest>) -> impl Res
                                 to,
                                 html,
                                 smtp_verification_name,
-                                smtp_verification_user,
                                 smtp_verification_email,
                             ) = verification_template(user.name, user.email, token);
                             let options = MailOptions {
-                                user: smtp_verification_user,
                                 user_name: smtp_verification_name,
                                 user_email: smtp_verification_email,
                                 to,
@@ -221,8 +219,8 @@ async fn login(data: Data<AppState>, body: Json<LoginRequest>) -> impl Responder
                 "error": "Invalid credentials"
             })),
         },
-        Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({
-            "error": "An error occurred while logging in"
+        Err(e) => HttpResponse::InternalServerError().json(serde_json::json!({
+            "error": format!("{}", e)
         })),
     }
 }
