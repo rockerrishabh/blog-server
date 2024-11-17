@@ -92,8 +92,7 @@ pub fn send_mail(options: MailOptions) {
             }
         }
         Err(e) => {
-            eprintln!("Failed to send email: {e:?}");
-            return;
+            println!("Failed to send email: {e:?}");
         }
     }
 }
