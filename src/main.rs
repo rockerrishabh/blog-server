@@ -2,7 +2,7 @@ use actix_cors::Cors;
 use actix_web::{get, http::header, web::Data, App, HttpResponse, HttpServer, Responder};
 use db::connection::{establish_pool, AppState};
 use middlewares::auth::Authentication;
-use rust_server::*;
+use server::*;
 use services::{
     posts::{create_post, delete_post, get_post, get_posts, update_post},
     users::{check_auth, login, logout, register},
@@ -11,7 +11,9 @@ use std::env;
 
 #[get("/")]
 async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+    HttpResponse::Ok().json(serde_json::json!({
+        "success": "Server is running",
+    }))
 }
 
 #[actix_web::main]

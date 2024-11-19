@@ -61,7 +61,6 @@ async fn create_post(
 
         return HttpResponse::BadRequest().json(serde_json::json!({
             "error": create_post_error_messages,
-       
         }));
     }
 

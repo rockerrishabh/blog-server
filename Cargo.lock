@@ -1700,28 +1700,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-server"
-version = "0.1.0"
-dependencies = [
- "actix-cors",
- "actix-web",
- "argon2",
- "chrono",
- "diesel",
- "dotenv",
- "futures-util",
- "http",
- "imap",
- "jsonwebtoken",
- "lettre",
- "native-tls",
- "serde",
- "serde_json",
- "uuid",
- "validator",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1850,6 +1828,28 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "actix-cors",
+ "actix-web",
+ "argon2",
+ "chrono",
+ "diesel",
+ "dotenv",
+ "futures-util",
+ "http",
+ "imap",
+ "jsonwebtoken",
+ "lettre",
+ "native-tls",
+ "serde",
+ "serde_json",
+ "uuid",
+ "validator",
 ]
 
 [[package]]
